@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zay Auto - 现车库存清单</title>
+    <link rel="icon" type="image/png" href="Z (3) - Copy.png">
+    <style>
+        /* ----------------------------------------------------
+           CSS 样式
+           ---------------------------------------------------- */
+body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #343a40;
+        }
+
+        .header {
+            background-color: #1F2937; /* 深色背景，匹配 Logo 颜色 */
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 新增：头部内容居中且保持左右空间 */
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+            gap: 15px; /* Logo 和标题之间的间距 */
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            flex-shrink: 0; /* 防止标题被 Logo 挤压 */
+        }
+        
+        /* 新增：Logo 样式 */
+        .logo {
+            height: 50px; /* 设置 Logo 高度 */
+            width: auto;
+        }
+        
+        /* 搜索和过滤容器 */
+        .controls {
+            padding: 20px;
+            text-align: center;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        #search-input {
+            padding: 10px;
+            width: 80%;
+            max-width: 400px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .main-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* 品牌分类标题样式 - 添加明显的分界线 */
+        .brand-category-title {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #1F2937;
+            margin: 50px auto 30px auto; 
+            padding-bottom: 10px;
+            border-bottom: 5px solid #007bff;
+            border-top: 1px solid #ccc;
+            width: 100%;
+            text-align: left;
+            box-sizing: border-box;
+            padding-left: 0;
+        }
+
+        /* 状态标题（在售/已售） */
+        .category-title {
+            font-size: 1.6em;
+            color: #1F2937;
+            margin: 30px 0 15px 0;
+            text-align: left;
+            padding-left: 20px;
+            border-left: 5px solid #007bff;
+        }
+
+        /* 车辆列表容器 */
+        .car-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: flex-start;
+        }
+
+        /* 单个车辆卡片 */
+        .car-item {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            width: calc(33.333% - 14px);
+            box-sizing: border-box;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .car-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .car-title {
+            font-size: 1.3em;
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .car-year {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .car-price {
+            font-size: 1.5em;
+            color: #dc3545;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .car-monthly {
+            font-size: 1.1em;
+            color: #28a745;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .car-status {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* 状态颜色 */
+        .status-available .car-status {
+            color: #28a745;
+            background-color: #e2f0e6;
+        }
+
+        .status-sold .car-status {
+            color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .whatsapp-btn {
+            display: block;
+            background-color: #25d366;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .whatsapp-btn:hover {
+            background-color: #128c7e;
+        }
+
+        /* 已售卡片灰色处理 */
+        .status-sold {
+            opacity: 0.7;
+            background-color: #f1f1f1;
+            transform: none; 
+            box-shadow: none;
+        }
+        
+        .status-sold .whatsapp-btn {
+            display: none;
+        }
+
+
+        /* 响应式设计 (手机屏幕优化) */
+        @media (max-width: 992px) {
+            .car-item {
+                width: calc(50% - 10px);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .car-item {
+                width: 100%;
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .logo {
+                height: 40px; /* 手机上 Logo 略小 */
+            }
+        }
+
+        /* 浮动计算器按钮和容器样式 */
+        .calculator-icon {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #007bff; /* 蓝色主题 */
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000; /* 确保它在最上层 */
+            transition: background-color 0.2s;
+        }
+
+        .calculator-icon:hover {
+            background-color: #0056b3;
+        }
+
+        /* 浮动计算器窗口样式 */
+        .calculator-popup {
+            position: fixed;
+            bottom: 100px; /* 在按钮上方 */
+            left: 20px;
+            width: 300px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            padding: 20px;
+            z-index: 1001;
+            display: none; /* 默认隐藏 */
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .calculator-popup h4 {
+            margin-top: 0;
+            color: #1F2937;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .calc-group {
+            margin-bottom: 15px;
+        }
+
+        .calc-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .calc-group input, .calc-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* 结果显示区 */
+        #monthly-payment-result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e2f0e6; /* 浅绿色背景 */
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #28a745;
+        }
+        
+        #monthly-payment-result span {
+            display: block;
+            font-size: 0.8em;
+            font-weight: normal;
+            color: #6c757d;
+        }
+        
+        /* 手机优化 */
+        @media (max-width: 576px) {
+            .calculator-icon {
+                bottom: 10px;
+                left: 10px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .calculator-popup {
+                width: 80%; /* 手机上宽度更大 */
+                left: 10px;
+                right: 10px;
+                bottom: 70px;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-content">
+            <img src="Z (4) - Copy.png" alt="Zay Auto Logo" class="logo">
+            
+            <h1>Stock List</h1>
+        </div>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="search-input" placeholder="输入关键词、型号或年份...">
+    </div>
+
+    <div class="main-content" id="car-container">
+        <p style="text-align: center; margin-top: 50px;">正在加载车辆数据...</p>
+    </div>
+    <div class="calculator-icon" id="calc-toggle">
+        &#x270E; </div>
+
+    <div class="calculator-popup" id="calculator-popup">
+        <h4>汽车贷款月供计算器</h4>
+        
+        <div class="calc-group">
+            <label for="otr-price">汽车 OTR (RM)</label>
+            <input type="number" id="otr-price" placeholder="例如: 60000" value="60000">
+        </div>
+
+        <div class="calc-group">
+            <label for="down-payment">头期/定金 (RM)</label>
+            <input type="number" id="down-payment" placeholder="例如: 6000" value="6000">
+        </div>
+
+        <div class="calc-group">
+            <label for="loan-years">贷款年份</label>
+            <select id="loan-years">
+                <option value="9">9 年</option>
+                <option value="8">8 年</option>
+                <option value="7">7 年</option>
+                <option value="6">6 年</option>
+                <option value="5">5 年</option>
+                <option value="4">4 年</option>
+                <option value="3">3 年</option>
+                <option value="2">2 年</option>
+                <option value="1">1 年</option>
+            </select>
+        </div>
+
+        <div class="calc-group">
+            <label for="interest-rate">年利率 (p.a.)</label>
+            <select id="interest-rate">
+                <option value="0.036">3.6%</option>
+                <option value="0.038">3.8%</option>
+                <option value="0.075">7.5%</option>
+                <option value="0.079">7.9%</option>
+                <option value="0.10">10.0%</option>
+            </select>
+        </div>
+        
+        <div id="monthly-payment-result">
+            RM 0.00
+            <span>预计每月供款</span>
+        </div>
+    </div>
+
+<script>
+        // ----------------------------------------------------
+        // 1. 数据源 (最终版：请手动填入 'monthly' 月供字段)
+        // ----------------------------------------------------
+        const cars = [
+            // PROTON
+            { 
+                model: "PROTON X70 1.8 PREMIUM", 
+                year: 2019, 
+                price: "RM 64,600", 
+                monthly: "", // <-- 请填入您的月供金额
+                status: "在售", 
+                id: 1, 
+            },
+            { model: "PROTON X50 1.5T FLAGSHIP", year: 2021, price: "RM 74,000", monthly: "", status: "在售", id: 2 },
+            { model: "PROTON X50 1.5T PREMIUM", year: 2022, price: "RM 73,000", monthly: "", status: "在售", id: 3 },
+            
+            // PERODUA
+            { model: "PERODUA AXIA 1.0 AV", year: 2015, price: "RM 30,000", monthly: "", status: "在售", id: 4 },
+            { model: "PERODUA MYVI 1.3", year: 2008, price: "RM 15,000", monthly: "", status: "已售", id: 5 },
+            { model: "PERODUA MYVI 1.3 G", year: 2015, price: "RM 31,000", monthly: "", status: "在售", id: 6 },
+            { model: "PERODUA MYVI 1.5 SE", year: 2016, price: "RM 36,000", monthly: "", status: "在售", id: 7 },
+            { model: "PERODUA MYVI 1.3 X", year: 2020, price: "RM 43,000", monthly: "", status: "在售", id: 8 },
+            { model: "PERODUA MYVI 1.5 H", year: 2020, price: "RM 48,000", monthly: "", status: "在售", id: 9 },
+            { model: "PERODUA MYVI 1.5 AV", year: 2021, price: "RM 53,000", monthly: "", status: "在售", id: 10 },
+            { model: "PERODUA BEZZA 1.3 X", year: 2022, price: "RM 44,000", monthly: "", status: "在售", id: 11 },
+            { model: "PERODUA ATIVA 1.0 H", year: 2022, price: "RM 61,000", monthly: "", status: "在售", id: 12 },
+            { model: "PERODUA ALZA 1.5 SE", year: 2019, price: "RM 51,600", monthly: "", status: "在售", id: 13 },
+            { model: "PERODUA ALZA 1.5 SE", year: 2020, price: "RM 53,600", monthly: "", status: "在售", id: 14 },
+            
+            // TOYOTA
+            { model: "TOYOTA VIOS 1.5 GX", year: 2018, price: "RM 61,600", monthly: "", status: "在售", id: 15 },
+            { model: "TOYOTA VIOS 1.5 E", year: 2019, price: "RM 60,600", monthly: "", status: "在售", id: 16 },
+            { model: "TOYOTA ALTIS 1.8 S", year: 2018, price: "RM 69,600", monthly: "", status: "在售", id: 17 },
+            { model: "TOYOTA RUSH 1.5 S", year: 2020, price: "RM 69,600", monthly: "", status: "在售", id: 18 },
+            { model: "TOYOTA AVANZA 1.5 S", year: 2020, price: "RM 59,600", monthly: "", status: "在售", id: 19 },
+            { model: "TOYOTA ESTIMA 2.4", year: 2012, price: "RM 55,600", monthly: "", status: "在售", id: 20 },
+            { model: "TOYOTA HILUX 2.5 TRD", year: 2015, price: "RM 63,000", monthly: "", status: "在售", id: 21 },
+            
+            // NISSAN
+            { model: "NISSAN X-TRAIL 2.0L IMPUL", year: 2018, price: "RM 59,600", monthly: "", status: "在售", id: 22 },
+            { model: "NISSAN GRAND LIVINA 1.6L", year: 2012, price: "RM 24,000", monthly: "", status: "在售", id: 23 },
+            { model: "NISSAN SERENA 2.0L IMPUL", year: 2020, price: "RM 99,000", monthly: "", status: "在售", id: 24 },
+            
+            // LEXUS
+            { model: "LEXUS RX350 F-SPORT", year: 2014, price: "RM 69,000", monthly: "", status: "在售", id: 25 },
+            
+            // VOLKSWAGEN
+            { model: "VOLKSWAGEN PASSAT 1.8 TSI", year: 2012, price: "RM 68,800", monthly: "", status: "在售", id: 26 },
+            { model: "VOLKSWAGEN PASSAT 1.8 TSI 280", year: 2018, price: "RM 68,800", monthly: "", status: "在售", id: 27 },
+            
+            // HONDA
+            { model: "HONDA CIVIC 1.8 S", year: 2020, price: "RM 83,800", monthly: "", status: "在售", id: 28 },
+            { model: "HONDA CIVIC 1.5 E", year: 2014, price: "RM 36,600", monthly: "", status: "在售", id: 29 },
+            { model: "HONDA CITY 1.5 E", year: 2018, price: "RM 57,600", monthly: "", status: "在售", id: 30 },
+            { model: "HONDA CITY 1.5 V", year: 2018, price: "RM 60,600", monthly: "", status: "在售", id: 31 },
+            { model: "HONDA CITY 1.5 E", year: 2019, price: "RM 62,600", monthly: "", status: "在售", id: 32 },
+            { model: "HONDA CITY 1.5 E", year: 2020, price: "RM 66,600", monthly: "", status: "在售", id: 33 },
+            { model: "HONDA CITY 1.5 E", year: 2023, price: "RM 75,800", monthly: "", status: "在售", id: 34 },
+            { model: "HONDA CITY 1.5 V HATCHBACK", year: 2022, price: "RM 77,800", monthly: "", status: "在售", id: 35 },
+            { model: "HONDA JAZZ 1.5 E", year: 2016, price: "RM 53,800", monthly: "", status: "在售", id: 36 },
+            { model: "HONDA JAZZ 1.5 E", year: 2019, price: "RM 67,600", monthly: "", status: "在售", id: 37 },
+            { model: "HONDA HR-V 1.8 E", year: 2019, price: "RM 76,800", monthly: "", status: "在售", id: 38 },
+            { model: "HONDA HR-V 1.8 V", year: 2016, price: "RM 54,600", monthly: "", status: "在售", id: 39 },
+            { model: "HONDA CR-V 1.5 TC-P", year: 2019, price: "RM 99,000", monthly: "", status: "在售", id: 40 },
+
+            // HYUNDAI
+            { model: "HYUNDAI SONATA 2.0", year: 2012, price: "RM 41,500", monthly: "", status: "在售", id: 41 },
+            { model: "HYUNDAI ELANTRA 1.6L", year: 2014, price: "RM 43,500", monthly: "", status: "在售", id: 42 },
+
+            // MERCEDES BENZ
+            { model: "MERCEDES BENZ C180 KOMPRESSOR", year: 2012, price: "价格待定", monthly: "", status: "在售", id: 43 },
+            
+            // PROTON PERDANA
+            { model: "PROTON PERDANA 2.0", year: 2014, price: "RM 33,000", monthly: "", status: "在售", id: 44 }
+        ];
+
+
+        // ----------------------------------------------------
+        // 2. 核心渲染函数和排序逻辑
+        // ----------------------------------------------------
+        
+        // 品牌自定义排序规则
+        const customBrandOrder = [
+            "PROTON",
+            "PERODUA",
+            "TOYOTA",
+            "NISSAN",
+            "HONDA",
+            "LEXUS",
+            "VOLKSWAGEN",
+            "HYUNDAI",
+            "MERCEDES", // MERCEDES BENZ 取第一个词
+        ];
+
+        // 辅助函数：生成列表项的 HTML 结构 (已移除图片和车况)
+        function renderList(list, ulElement) {
+             list.forEach(car => {
+                const isSold = car.status === '已售';
+                const statusClass = isSold ? 'status-sold' : 'status-available';
+                
+                // WhatsApp 询价链接
+                const waLink = `https://wa.me/60105000111?text=Hi%2C%20我对${encodeURIComponent(car.model)}%20${car.year}%20感兴趣%2C%20请发更多资料。`;
+                
+                const carItem = document.createElement('li');
+                carItem.className = `car-item ${statusClass}`;
+                
+                carItem.innerHTML = `
+                    <h3 class="car-title">${car.model}</h3>
+                    <p class="car-year">年份: ${car.year}</p>
+                    
+                    <p class="car-price">售价: ${car.price}</p>
+                    
+                    <p class="car-monthly">月供起价: <strong>${car.monthly || 'N/A'}</strong></p>
+                    
+                    <p><strong>状态:</strong> <span class="car-status">${car.status}</span></p>
+                    
+                    ${isSold ? '' : `<a href="${waLink}" target="_blank" class="whatsapp-btn">📲 立即询问 (wa.me/60105000111)</a>`}
+                `;
+                ulElement.appendChild(carItem);
+            });
+        }
+        
+        // 新增辅助函数：用于渲染品牌内的子分类 (在售/已售)
+        function renderBrandGroup(title, cars, container) {
+            const availableCars = cars.filter(car => car.status === '在售');
+            const soldCars = cars.filter(car => car.status === '已售');
+
+            // --- 渲染 '在售' 车辆 ---
+            if (availableCars.length > 0) {
+                container.innerHTML += `<h3 class="category-title">🟢 在售现车 ${title ? `(${title})` : ''}</h3>`;
+                const availableList = document.createElement('ul');
+                availableList.className = 'car-list';
+                renderList(availableCars, availableList); 
+                container.appendChild(availableList);
+            }
+
+            // --- 渲染 '已售' 车辆 ---
+            if (soldCars.length > 0) {
+                container.innerHTML += `<h3 class="category-title">🔴 已售记录 (Sold History) ${title ? `(${title})` : ''}</h3>`;
+                const soldList = document.createElement('ul');
+                soldList.className = 'car-list';
+                renderList(soldCars, soldList);
+                container.appendChild(soldList);
+            }
+        }
+
+        // 主渲染函数：按品牌分组并渲染
+        function renderCars(carArray) {
+            const container = document.getElementById('car-container');
+            container.innerHTML = ''; // 清空现有内容
+
+            // 1. 按品牌名称分组
+            const groupedByBrand = carArray.reduce((acc, car) => {
+                // 提取品牌名 (假设品牌名是 model 字段中的第一个词)
+                const brand = car.model.split(' ')[0].toUpperCase();
+                if (!acc[brand]) {
+                    acc[brand] = [];
+                }
+                acc[brand].push(car);
+                return acc;
+            }, {});
+            
+            // *** 使用自定义顺序进行排序 ***
+            const allBrands = Object.keys(groupedByBrand);
+            const sortedBrands = customBrandOrder.filter(brand => allBrands.includes(brand));
+            
+            allBrands.forEach(brand => {
+                if (!sortedBrands.includes(brand)) {
+                    sortedBrands.push(brand);
+                }
+            });
+            // **********************************
+
+            // 2. 遍历品牌，逐个渲染
+            sortedBrands.forEach(brand => {
+                const carsOfBrand = groupedByBrand[brand];
+                
+                if (carsOfBrand.length === 0) return;
+
+                // 创建品牌大标题 (带分隔线)
+                container.innerHTML += `<h2 class="brand-category-title">🚗 ${brand}</h2>`;
+
+                if (brand === 'PROTON') {
+                    // 分离出 PROTON PERDANA
+                    const perdana = carsOfBrand.filter(car => car.model.toUpperCase().includes('PERDANA'));
+                    const otherProtons = carsOfBrand.filter(car => !car.model.toUpperCase().includes('PERDANA'));
+
+                    // 先渲染 PROTON 核心车系 (X70, X50)
+                    renderBrandGroup('', otherProtons, container);
+                    
+                    // 然后渲染 PROTON PERDANA (作为您要求的第 10 项)
+                    if (perdana.length > 0) {
+                        // 注意：这里我们单独创建一个标题并渲染，以实现排在最后的效果
+                        container.innerHTML += `<h2 class="brand-category-title" style="margin-top: 20px; border-bottom: 2px solid #ccc; font-size: 1.5em;">🚗 PROTON PERDANA</h2>`;
+                        renderBrandGroup('', perdana, container);
+                    }
+                } else {
+                    // 渲染其他所有品牌
+                    renderBrandGroup('', carsOfBrand, container);
+                }
+            });
+            
+            if (carArray.length === 0) {
+                 container.innerHTML += '<h2 class="brand-category-title" style="border-bottom:none; color:#dc3545;">未找到匹配车辆...</h2>';
+            }
+        }
+
+        // ----------------------------------------------------
+        // 3. 搜索功能
+        // ----------------------------------------------------
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredCars = cars.filter(car => 
+                car.model.toLowerCase().includes(searchTerm) || 
+                car.year.toString().includes(searchTerm)
+            );
+            renderCars(filteredCars);
+        });
+        
+        // ----------------------------------------------------
+        // 4. 贷款计算器逻辑
+        // ----------------------------------------------------
+        
+        // 贷款计算公式 (您之前提供的简化平息法)
+        function calculateMonthlyPayment(principal, years, rate) {
+            // 贷款总额 = 本金 * (1 + 年利率 * 年限)
+            const totalLoanAmount = principal * (1 + rate * years);
+            
+            // 总月数
+            const months = years * 12;
+            
+            // 每月供款 = 贷款总额 / 总月数
+            const monthlyPayment = totalLoanAmount / months;
+            
+            return monthlyPayment;
+        }
+
+        // 获取所有输入/选择元素
+        const otrInput = document.getElementById('otr-price');
+        const downPaymentInput = document.getElementById('down-payment');
+        const loanYearsSelect = document.getElementById('loan-years');
+        const interestRateSelect = document.getElementById('interest-rate');
+        const resultDiv = document.getElementById('monthly-payment-result');
+
+        // 计算并更新结果
+        function updateCalculation() {
+            const otr = parseFloat(otrInput.value) || 0;
+            const downPayment = parseFloat(downPaymentInput.value) || 0;
+            const years = parseInt(loanYearsSelect.value) || 0;
+            const rate = parseFloat(interestRateSelect.value) || 0;
+            
+            // 确保 OTR 大于 头期
+            if (otr <= downPayment) {
+                resultDiv.innerHTML = "RM 0.00<span>OTR 需大于头期</span>";
+                return;
+            }
+
+            const principal = otr - downPayment;
+            
+            if (years === 0 || rate === 0) {
+                resultDiv.innerHTML = "RM 0.00<span>请选择年限和利率</span>";
+                return;
+            }
+
+            const monthlyPayment = calculateMonthlyPayment(principal, years, rate);
+            
+            resultDiv.innerHTML = `RM ${monthlyPayment.toFixed(2)}<span>预计每月供款</span>`;
+        }
+        
+        // 监听所有输入变化
+        otrInput.addEventListener('input', updateCalculation);
+        downPaymentInput.addEventListener('input', updateCalculation);
+        loanYearsSelect.addEventListener('change', updateCalculation);
+        interestRateSelect.addEventListener('change', updateCalculation);
+
+        // 初始化计算器弹出/隐藏功能
+        const calcToggleButton = document.getElementById('calc-toggle');
+        const calcPopup = document.getElementById('calculator-popup');
+
+        // 检查元素是否存在，防止报错（用于旧版本代码兼容）
+        if (calcToggleButton && calcPopup) {
+             calcToggleButton.addEventListener('click', () => {
+                const isHidden = calcPopup.style.display === 'none' || calcPopup.style.display === '';
+                if (isHidden) {
+                    calcPopup.style.display = 'block';
+                    calcToggleButton.innerHTML = '&#x2715;'; // X 图标
+                    updateCalculation(); // 弹出时进行一次计算
+                } else {
+                    calcPopup.style.display = 'none';
+                    calcToggleButton.innerHTML = '&#x270E;'; // 铅笔图标
+                }
+            });
+        }
+        
+
+        // 页面加载完成后，首先显示所有车辆并执行初始计算
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCars(cars);
+            // 确保元素存在再执行初始计算
+            if (otrInput) {
+                updateCalculation();
+            }
+        });
+
+</script>
+</body>
+</html>
